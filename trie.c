@@ -77,7 +77,3 @@ void delete_trie(trie_t* root) {
   }
   free(root);
 }
-
-whcar_t** get_completions(trie_t* root, const wchar_t* pattern) {
-
-}
