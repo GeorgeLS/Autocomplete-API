@@ -3,14 +3,11 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <string.h>
 #include <wchar.h>
 
 #include "macros.h"
 #include "utils.h"
 #include "queue.h"
-
-#define MALLOC(size, type) ((type*) malloc((size) * sizeof(type)))
 
 typedef struct trie_node {
   struct trie_node* child;
@@ -19,7 +16,17 @@ typedef struct trie_node {
   bool end_of_word;
 } trie_t;
 
-static inline _FORCE_INLINE trie_t* create_trie_node(wchar_t letter) {
+static inline _FORCE_INLINE
+size_t _strlen(const wchar_t* str) {
+  size_t length = 0U;
+  while (*str++ != '\0') {
+    ++length;
+  }
+  return length;
+}
+
+static inline _FORCE_INLINE
+trie_t* create_trie_node(wchar_t letter) {
   trie_t* new_trie_node = MALLOC(1, trie_t);
   if (new_trie_node == NULL) {
     fatal("Couldn't allocate memory for a trie node\nExiting");
@@ -36,7 +43,7 @@ trie_t* insert(trie_t* root, const wchar_t* key) {
   }
   trie_t* father = root;
   trie_t* current = root->child;
-  size_t key_length = strlen(key);
+  size_t key_length = _strlen(key);
   for (size_t i = 0U; i != key_length; ++i) {
     if (current == NULL) {
       current = create_trie_node(key[i]);
@@ -63,7 +70,7 @@ trie_t* insert(trie_t* root, const wchar_t* key) {
 trie_t* construct_trie(wchar_t* const* word_list, size_t length) {
   trie_t* new_trie;
   for (size_t i = 0U; i != length; ++i) {
-    new_trie = insert(word_list[i]);
+    new_trie = insert(new_trie, word_list[i]);
   }
   return new_trie;
 }
@@ -76,4 +83,43 @@ void delete_trie(trie_t* root) {
     delete_trie(root->child);
   }
   free(root);
+}
+
+static inline _FORCE_INLINE
+const trie_t* search(const trie_t* root, const wchar_t* pattern) {
+  if (root == NULL || pattern == NULL) {
+    return NULL;
+  }
+  size_t pattern_length = _strlen(pattern);
+  const trie_t* father = root;
+  const trie_t* current = root->child;
+  for (size_t i = 0U; i != pattern_length; ++i) {
+    if (current == NULL) return NULL;
+    else if (current->letter != pattern[i]) {
+      father = current;
+      current = current->sibling;
+      while (current != NULL && current->letter != pattern[i]) {
+        father = current;
+        current = current->sibling;
+      }
+      if (current == NULL) return NULL;
+    }
+    father = current;
+    current = current->child;
+  }
+  return ((father != NULL && father->end_of_word) ? father : NULL);
+}
+
+static inline _FORCE_INLINE
+ssize_t count_completions(const trie_t* root, const wchar_t* pattern) {
+  const trie_t* pattern_end = search(root, pattern);
+  if (pattern_end == NULL) return -1;
+  ssize_t completions = 0;
+  return completions;
+}
+
+wchar_t** get_completions(const trie_t* root, const wchar_t* pattern) {
+  if (root == NULL || pattern == NULL) {
+    return NULL;
+  }
 }
