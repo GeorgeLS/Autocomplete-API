@@ -110,16 +110,19 @@ const trie_t* search(const trie_t* root, const wchar_t* pattern) {
   return ((father != NULL && father->end_of_word) ? father : NULL);
 }
 
-static inline _FORCE_INLINE
-ssize_t count_completions(const trie_t* root, const wchar_t* pattern) {
-  const trie_t* pattern_end = search(root, pattern);
-  if (pattern_end == NULL) return -1;
-  ssize_t completions = 0;
-  return completions;
+static void count_completions(const trie_t* root, size_t* completions) {
+  if (root->end_of_word) ++(*completions);
+  if (root->sibling != NULL) count_completions(root->sibling, completions);
+  if (root->child != NULL) count_completions(root->child, completions);
 }
 
 wchar_t** get_completions(const trie_t* root, const wchar_t* pattern) {
   if (root == NULL || pattern == NULL) {
     return NULL;
   }
+  const trie_t* pattern_end = search(root, pattern);
+  if (pattern_end == NULL) return NULL;
+  size_t completions_number;
+  count_completions(pattern_end, &completions_number);
+  wchar_t** completions = MALLOC(completions_number, wchar_t*);
 }
