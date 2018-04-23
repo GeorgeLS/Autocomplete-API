@@ -123,4 +123,5 @@ wchar_t** get_completions(const trie_t* root, const wchar_t* pattern) {
   size_t completions_number;
   count_completions(pattern_end, &completions_number);
   wchar_t** completions = MALLOC(completions_number, wchar_t*);
+    
 }

@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 
+#define MAX(x, y) ((x) >= (y) ? (x) : (y))
 #define MALLOC(size, type) ((type*) malloc((size) * sizeof(type)))
 
 #if __GNUC__
