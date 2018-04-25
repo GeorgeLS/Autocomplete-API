@@ -25,7 +25,7 @@ typedef struct BufHdr BufHdr;
 
 void _NO_RET fatal(const char* fmt, ...);
 void* buff__grow(const void* buf, size_t new_len, size_t elem_size);
-char* buf__print(char* buf, const char* fmt, ...);
+char* buf__print(wchar_t* buf, const wchar_t* fmt, ...);
 void* xmalloc(size_t num_bytes);
 void* xrealloc(void* ptr, size_t numb_bytes);
 

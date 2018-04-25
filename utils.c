@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <wchar.h>
 
 #include "utils.h"
 #include "macros.h"
@@ -10,7 +11,7 @@
 typedef struct BufHdr {
   size_t len;
   size_t cap;
-  char buf[];
+  wchar_t buf[];
 } BufHdr;
 
 void _NO_RET fatal(const char* fmt, ...) {

@@ -1,11 +1,17 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <wchar.h>
 
 #include "macros.h"
 #include "utils.h"
 #include "queue.h"
+
+typedef struct completions {
+  wchar_t** completions;
+  size_t completions_number;
+} completions_t;
 
 typedef struct trie_node {
   struct trie_node* child;
@@ -114,14 +120,43 @@ static void count_completions(const trie_t* root, size_t* completions) {
   if (root->child != NULL) count_completions(root->child, completions);
 }
 
-wchar_t** get_completions(const trie_t* root, const wchar_t* pattern) {
+static void push_completions(const trie_t* root, BufHdr** completions, size_t index) {
+  buf_push(completions[index], root->letter);
+  if (root->end_of_word) buf_push(completions[index], '\0');
+  if (root->sibling != NULL) push_completions(root->sibling, completions, index + 1);
+  if (root->child != NULL) push_completions(root->child, completions, index);
+}
+
+static inline _FORCE_INLINE void init_completions(completions_t* completions) {
+  completions->completions = NULL;
+  completions->completions_number = 0U;
+}
+
+completions_t* get_completions(const trie_t* root, const wchar_t* pattern) {
   if (root == NULL || pattern == NULL) {
     return NULL;
   }
   const trie_t* pattern_end = search(root, pattern);
-  if (pattern_end == NULL) return NULL;
+  if (pattern_end == NULL || pattern_end->child == NULL) return NULL;
   size_t completions_number;
   count_completions(pattern_end, &completions_number);
-  wchar_t** completions = MALLOC(completions_number, wchar_t*);
-    
+  completions_t* completions = MALLOC(1, completions_t);
+  init_completions(completions);
+  completions->completions = MALLOC(completions_number, wchar_t*);
+  completions->completions_number = completions_number;
+  BufHdr** aux_sbuffers = MALLOC(completions_number, BufHdr*);
+  for (size_t i = 0U; i != completions_number; ++i) {
+    aux_sbuffers[i] = MALLOC(1, BufHdr);
+  }
+  push_completions(pattern_end->child, aux_sbuffers, 0U);
+  size_t pattern_length = _strlen(pattern);
+  for (size_t i = 0U; i != completions_number; ++i) {
+    completions->completions[i] = MALLOC(pattern_length + buf_len(aux_sbuffers[i]) + 1, wchar_t);
+    strncpy(completions->completions[i], aux_sbuffers[i]->buf, buf_len(aux_sbuffers[i]));
+  }
+  for (size_t i = 0U; i != completions_number; ++i) {
+    buf_free(aux_sbuffers[i]);
+  }
+  free(aux_sbuffers);
+  return completions;
 }
