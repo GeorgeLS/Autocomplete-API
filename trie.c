@@ -6,6 +6,7 @@
 
 #include "macros.h"
 #include "utils.h"
+#include "queue.h"
 
 typedef struct completions {
   wchar_t** completions;
@@ -31,6 +32,10 @@ trie_t* create_trie_node(wchar_t letter) {
   return new_trie_node;
 }
 
+trie_t* create_trie(void) {
+  return create_trie_node('\0');
+}
+
 trie_t* insert(trie_t* root, const wchar_t* key) {
   if (root == NULL) {
     root = create_trie_node('\0');
@@ -49,7 +54,7 @@ trie_t* insert(trie_t* root, const wchar_t* key) {
         father = current;
         current = current->sibling;
       }
-      if (current != NULL) {
+      if (current == NULL) {
         current = create_trie_node(key[i]);
         father->sibling = current;
       }
@@ -149,4 +154,41 @@ completions_t* get_completions(const trie_t* root, const wchar_t* pattern) {
   }
   free(aux_sbuffers);
   return completions;
+}
+
+void print_trie_r(trie_t* root, queue_t* queue) {
+  queue = enqueue(queue, root->letter);
+  queue_t* aux = NULL;
+  if (root->end_of_word) {
+    aux = copy_to_the_end(queue);
+    while (queue != NULL) {
+      queue = dequeue(queue);
+    }
+    putchar('\n');
+  }
+  if (root->sibling != NULL) {
+    queue_t* queue_to_copy = (get_next(get_start(queue))) ? queue : NULL;
+    aux = (aux == NULL) ? copy_before_end(queue_to_copy) : aux;
+    print_trie_r(root->sibling, aux);
+  }
+  if (root->child != NULL) {
+    queue_t* queue_to_pass = (queue) ? queue : aux;
+    print_trie_r(root->child, queue_to_pass);
+  }
+  delete_queue(aux);
+}
+
+void print_trie(trie_t* root) {
+  if (root == NULL) return;
+  queue_t* queue = create_queue();
+  print_trie_r(root->child, queue);
+  delete_queue(queue);
+}
+
+wchar_t** get_completions_array(completions_t* completions) {
+  return completions->completions;
+}
+
+size_t get_completions_number(completions_t* completions) {
+  return completions->completions_number;
 }
