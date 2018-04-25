@@ -8,12 +8,6 @@
 #include "utils.h"
 #include "macros.h"
 
-typedef struct BufHdr {
-  size_t len;
-  size_t cap;
-  wchar_t buf[];
-} BufHdr;
-
 void _NO_RET fatal(const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);

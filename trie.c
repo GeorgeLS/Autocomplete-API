@@ -21,15 +21,6 @@ typedef struct trie_node {
 } trie_t;
 
 static inline _FORCE_INLINE
-size_t _strlen(const wchar_t* str) {
-  size_t length = 0U;
-  while (*str++ != '\0') {
-    ++length;
-  }
-  return length;
-}
-
-static inline _FORCE_INLINE
 trie_t* create_trie_node(wchar_t letter) {
   trie_t* new_trie_node = MALLOC(1, trie_t);
   if (new_trie_node == NULL) {
@@ -47,7 +38,7 @@ trie_t* insert(trie_t* root, const wchar_t* key) {
   }
   trie_t* father = root;
   trie_t* current = root->child;
-  size_t key_length = _strlen(key);
+  size_t key_length = wcslen(key);
   for (size_t i = 0U; i != key_length; ++i) {
     if (current == NULL) {
       current = create_trie_node(key[i]);
@@ -94,7 +85,7 @@ const trie_t* search(const trie_t* root, const wchar_t* pattern) {
   if (root == NULL || pattern == NULL) {
     return NULL;
   }
-  size_t pattern_length = _strlen(pattern);
+  size_t pattern_length = wcslen(pattern);
   const trie_t* father = root;
   const trie_t* current = root->child;
   for (size_t i = 0U; i != pattern_length; ++i) {
@@ -149,10 +140,10 @@ completions_t* get_completions(const trie_t* root, const wchar_t* pattern) {
     aux_sbuffers[i] = MALLOC(1, BufHdr);
   }
   push_completions(pattern_end->child, aux_sbuffers, 0U);
-  size_t pattern_length = _strlen(pattern);
+  size_t pattern_length = wcslen(pattern);
   for (size_t i = 0U; i != completions_number; ++i) {
     completions->completions[i] = MALLOC(pattern_length + buf_len(aux_sbuffers[i]) + 1, wchar_t);
-    strncpy(completions->completions[i], aux_sbuffers[i]->buf, buf_len(aux_sbuffers[i]));
+    wmemcpy(completions->completions[i], aux_sbuffers[i]->buf, buf_len(aux_sbuffers[i]));
   }
   for (size_t i = 0U; i != completions_number; ++i) {
     buf_free(aux_sbuffers[i]);
