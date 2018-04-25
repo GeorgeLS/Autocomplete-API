@@ -6,7 +6,6 @@
 
 #include "macros.h"
 #include "utils.h"
-#include "queue.h"
 
 typedef struct completions {
   wchar_t** completions;
