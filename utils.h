@@ -7,31 +7,37 @@
 
 #include "macros.h"
 
-/* Macros and functions for strechy buffers */
+/* Macros and functions for strechy buffers. Author: Sean Barett. */
 
-typedef struct BufHdr {
-  size_t len;
-  size_t cap;
-  wchar_t buf[];
-} BufHdr;
+#define stb_sb_free(a)         ((a) ? free(stb__sbraw(a)),0 : 0)
+#define stb_sb_push(a,v)       (stb__sbmaybegrow(a,1), (a)[stb__sbn(a)++] = (v))
+#define stb_sb_count(a)        ((a) ? stb__sbn(a) : 0)
+#define stb_sb_add(a,n)        (stb__sbmaybegrow(a,n), stb__sbn(a)+=(n), &(a)[stb__sbn(a)-(n)])
+#define stb_sb_last(a)         ((a)[stb__sbn(a)-1])
+
+#define stb__sbraw(a) ((int *) (a) - 2)
+#define stb__sbm(a)   stb__sbraw(a)[0]
+#define stb__sbn(a)   stb__sbraw(a)[1]
+
+#define stb__sbneedgrow(a,n)  ((a)==0 || stb__sbn(a)+(n) >= stb__sbm(a))
+#define stb__sbmaybegrow(a,n) (stb__sbneedgrow(a,(n)) ? stb__sbgrow(a,n) : 0)
+#define stb__sbgrow(a,n)      (*((void **)&(a)) = stb__sbgrowf((a), (n), sizeof(*(a))))
+
+static void* stb__sbgrowf(void *arr, int increment, int itemsize) {
+   int dbl_cur = arr ? 2*stb__sbm(arr) : 0;
+   int min_needed = stb_sb_count(arr) + increment;
+   int m = dbl_cur > min_needed ? dbl_cur : min_needed;
+   int* p = (int*) realloc(arr ? stb__sbraw(arr) : 0, itemsize * m + sizeof(int)*2);
+   if (p) {
+      if (!arr)
+         p[1] = 0;
+      p[0] = m;
+      return p+2;
+   } else {
+      return (void *) (2*sizeof(int));
+   }
+}
 
 void _NO_RET fatal(const char* fmt, ...);
-void* buf__grow(const void* buf, size_t new_len, size_t elem_size);
-char* buf__print(wchar_t* buf, const wchar_t* fmt, ...);
-void* xmalloc(size_t num_bytes);
-void* xrealloc(void* ptr, size_t numb_bytes);
-
-#define buf__hdr(b) ((BufHdr*)((char*)(b) - offsetof(BufHdr, buf)))
-
-#define buf_len(b) ((b) ? buf__hdr(b)->len : 0)
-#define buf_cap(b) ((b) ? buf__hdr(b)->cap : 0)
-#define buf_end(b) ((b) + buf_len(b))
-#define buf_sizeof(b) ((b) ? buf_len(b) * sizeof(*b) : 0)
-
-#define buf_free(b) ((b) ? (free(buf__hdr(b)), (b) = NULL) : 0)
-#define buf_fit(b, n) ((n) <= buf_cap(b) ? 0 : ((b) = buf__grow((b), (n), sizeof(*(b)))))
-#define buf_push(b, ...) (buf_fit((b), 1 + buf_len(b)), buf__hdr(b)->buf[buf__hdr(b)->len++] = (__VA_ARGS__))
-#define buf_printf(b, ...) ((b) = buf__printf((b), __VA_ARGS__))
-#define buf_clear(b) ((b) ? buf__hdr(b)->len = 0 : 0)
 
 #endif

@@ -22,7 +22,7 @@ void print_trie(trie_t* root);
 /* Deletes the trie */
 void delete_trie(trie_t* root);
 
-completions_t* get_completions(const trie_t* root, const wchar_t* pattern);
+completions_t* get_completions(const trie_t* root, wchar_t* pattern);
 wchar_t**  get_completions_array(completions_t* completions);
 size_t get_completions_number(completions_t* completions);
 

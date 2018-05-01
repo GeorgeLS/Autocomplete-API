@@ -4,7 +4,7 @@ CFLAGS = -Wall -ggdb
 bin: queue.o test.o trie.o utils.o 
 	$(CC) $(CFLAGS) queue.o test.o trie.o utils.o -o autocomplete 
 
-queue.o : queue.c macros.h 
+queue.o : queue.c macros.h utils.h 
 	$(CC) $(CFLAGS) -c queue.c 
 
 test.o : test.c trie.h 
